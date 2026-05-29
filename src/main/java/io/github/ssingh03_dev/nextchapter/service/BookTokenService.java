@@ -8,10 +8,10 @@ import org.springframework.stereotype.Service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.HexFormat;
+import java.util.Optional;
 
 @Service
 public class BookTokenService {     // generate, hash, store, validate, revoke tokens
@@ -60,6 +60,33 @@ public class BookTokenService {     // generate, hash, store, validate, revoke t
         newBT.setTokenPrefix(prefix);
         newBT.setActive(true);
 
+        bookTokenRepository.save(newBT);
+
         return rawToken;
+    }
+
+    public Optional<Book> findBookByToken(String rawToken) {
+        String hashedToken = hashRawToken(rawToken);
+
+        return bookTokenRepository.findByTokenHash(hashedToken)
+                .filter(BookToken::getActive)
+                .map(BookToken::getBook);
+    }       // acts as a way to validate the token too
+
+//    public boolean validateToken(String rawToken, Long bookId) {
+//        String hashedToken = hashRawToken(rawToken);
+//        BookToken bookToken = bookTokenRepository.findByTokenHash(hashedToken)
+//                .orElseThrow(() -> new RuntimeException("Invalid token"));
+//
+//        return bookToken.getBook().getId().equals(bookId) && bookToken.getActive();
+//    }
+
+    public void revokeToken(String rawToken) {
+        String hashedToken = hashRawToken(rawToken);
+        BookToken bookToken = bookTokenRepository.findByTokenHash(hashedToken)
+                .orElseThrow(() -> new RuntimeException("Invalid token"));
+
+        bookToken.setActive(false);
+        bookTokenRepository.save(bookToken);
     }
 }
