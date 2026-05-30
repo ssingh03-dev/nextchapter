@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Optional;
@@ -59,6 +60,7 @@ public class BookTokenService {     // generate, hash, store, validate, revoke t
         newBT.setTokenHash(hashToken);
         newBT.setTokenPrefix(prefix);
         newBT.setActive(true);
+        newBT.setCreatedAt(Instant.now());
 
         bookTokenRepository.save(newBT);
 
