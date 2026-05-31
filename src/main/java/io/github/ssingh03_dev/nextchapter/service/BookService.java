@@ -1,5 +1,6 @@
 package io.github.ssingh03_dev.nextchapter.service;
 
+import io.github.ssingh03_dev.nextchapter.dto.request.UpdateBookRequest;
 import io.github.ssingh03_dev.nextchapter.dto.response.BookResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.CreateBookResponse;
 import io.github.ssingh03_dev.nextchapter.model.Book;
@@ -8,6 +9,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -51,5 +54,31 @@ public class BookService {      // add/update books, for now
     public Optional<BookResponse> getBookById(Long id) {
         return bookRepository.findById(id)
                 .map(this::toBookResponse);
+    }
+
+    public List<BookResponse> getBooks() {
+        return bookRepository.findAll()
+                .stream()
+                .map(this::toBookResponse)
+                .toList();
+    }
+
+    public Optional<BookResponse> updateBook(Long id, String rawToken, UpdateBookRequest updateBookRequest) {
+        Book book = bookTokenService.findBookByToken(rawToken).orElse(null);
+
+        if (book == null || !book.getId().equals(id)) {
+            return Optional.empty();
+        }
+
+        if (updateBookRequest.title() != null) {
+            book.setTitle(updateBookRequest.title());
+        }
+        if (updateBookRequest.author() != null) {
+            book.setAuthor(updateBookRequest.author());
+        }
+
+        book = bookRepository.save(book);
+
+        return Optional.of(toBookResponse(book));
     }
 }

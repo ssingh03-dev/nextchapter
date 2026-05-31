@@ -1,10 +1,12 @@
 package io.github.ssingh03_dev.nextchapter.controller;
 
 import io.github.ssingh03_dev.nextchapter.dto.request.CreateBookRequest;
+import io.github.ssingh03_dev.nextchapter.dto.request.UpdateBookRequest;
 import io.github.ssingh03_dev.nextchapter.dto.response.BookResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.CreateBookResponse;
 import io.github.ssingh03_dev.nextchapter.model.Book;
 import io.github.ssingh03_dev.nextchapter.service.BookService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -21,7 +23,7 @@ public class BookController {
     }
 
     @PostMapping
-    public CreateBookResponse addBook(@RequestBody CreateBookRequest createBookRequest) {
+    public CreateBookResponse addBook(@Valid @RequestBody CreateBookRequest createBookRequest) {
         // the return is a dto containing book info plus raw token
         return bookService.addBook(createBookRequest.title(), createBookRequest.author());
     }
@@ -36,10 +38,23 @@ public class BookController {
 
     // get mapping for all books
     @GetMapping
-    public List<Book> getBooks() {
-        return null;
+    public List<BookResponse> getBooks() {
+        return bookService.getBooks();
     }
 
     // anything after, the raw token is required
     // token defines what book is being affected, also authorizes it at the same time
+
+    @PatchMapping("/{id}")
+    public ResponseEntity<BookResponse> updateBook(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String bearerToken,
+            @RequestBody UpdateBookRequest updateBookRequest
+    ) {
+        String rawToken = bearerToken.replace("Bearer ", "");
+        return bookService.updateBook(id, rawToken, updateBookRequest)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
 }
