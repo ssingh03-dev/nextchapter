@@ -9,7 +9,6 @@ import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -80,5 +79,16 @@ public class BookService {      // add/update books, for now
         book = bookRepository.save(book);
 
         return Optional.of(toBookResponse(book));
+    }
+
+    public boolean deleteBook(Long id, String rawToken) {
+        Book book = bookTokenService.findBookByToken(rawToken).orElse(null);
+
+        if (book == null || !book.getId().equals(id)) {
+            return false;
+        }
+
+        bookRepository.deleteById(id);
+        return true;
     }
 }

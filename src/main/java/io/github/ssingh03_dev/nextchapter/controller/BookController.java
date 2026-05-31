@@ -4,7 +4,6 @@ import io.github.ssingh03_dev.nextchapter.dto.request.CreateBookRequest;
 import io.github.ssingh03_dev.nextchapter.dto.request.UpdateBookRequest;
 import io.github.ssingh03_dev.nextchapter.dto.response.BookResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.CreateBookResponse;
-import io.github.ssingh03_dev.nextchapter.model.Book;
 import io.github.ssingh03_dev.nextchapter.service.BookService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -55,6 +54,19 @@ public class BookController {
         return bookService.updateBook(id, rawToken, updateBookRequest)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteBook(
+            @PathVariable Long id,
+            @RequestHeader("Authorization") String bearerToken
+    ) {
+        String rawToken = bearerToken.replace("Bearer ", "");
+        if (bookService.deleteBook(id, rawToken)) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
     }
 
 }
