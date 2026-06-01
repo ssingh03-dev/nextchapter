@@ -71,4 +71,18 @@ public class ChapterController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @DeleteMapping("/{chapterId}")
+    public ResponseEntity<Void> deleteChapter(
+            @PathVariable Long bookId, @PathVariable Long chapterId,
+            @RequestHeader("Authorization") String bearerToken
+    ) {
+        String rawToken = bearerToken.replace("Bearer ", "");
+
+        if (chapterService.deleteChapter(bookId, chapterId, rawToken)) {
+            return ResponseEntity.noContent().build();
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

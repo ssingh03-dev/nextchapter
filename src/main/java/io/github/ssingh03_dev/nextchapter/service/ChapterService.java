@@ -112,4 +112,27 @@ public class ChapterService {
 
         return Optional.of(toChapterResponse(chapter));
     }
+
+    public boolean deleteChapter(Long bookId, Long chapterId, String rawToken) {
+        Book book = bookTokenService.findBookByToken(rawToken).orElse(null);
+        if (book == null || !book.getId().equals(bookId)) {
+            return false;
+        }
+
+        Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+        if (chapter == null || !chapter.getBook().getId().equals(bookId)) {
+            return false;
+        }
+
+        int chapterNumber = chapter.getChapterNumber();
+
+        chapterRepository.delete(chapter);
+
+        List<Chapter> affectedChapters = chapterRepository
+                .findByBookIdAndChapterNumberGreaterThanOrderByChapterNumberAsc(bookId, chapterNumber);
+        affectedChapters.forEach(aChapter -> aChapter.setChapterNumber(aChapter.getChapterNumber()-1));
+        chapterRepository.saveAll(affectedChapters);
+
+        return true;
+    }
 }
