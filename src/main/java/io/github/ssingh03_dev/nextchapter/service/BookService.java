@@ -64,7 +64,6 @@ public class BookService {      // add/update books, for now
 
     public Optional<BookResponse> updateBook(Long id, String rawToken, UpdateBookRequest updateBookRequest) {
         Book book = bookTokenService.findBookByToken(rawToken).orElse(null);
-
         if (book == null || !book.getId().equals(id)) {
             return Optional.empty();
         }

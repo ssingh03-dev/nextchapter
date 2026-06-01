@@ -1,5 +1,6 @@
 package io.github.ssingh03_dev.nextchapter.service;
 
+import io.github.ssingh03_dev.nextchapter.dto.request.UpdateChapterRequest;
 import io.github.ssingh03_dev.nextchapter.dto.response.ChapterResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.ChapterSummaryResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.CreateChapterResponse;
@@ -85,5 +86,30 @@ public class ChapterService {
                 .stream()
                 .map(this::toChapterSummaryResponse)
                 .toList();
+    }
+
+    public Optional<ChapterResponse> updateChapter(
+            Long bookId, Long chapterId, String rawToken, UpdateChapterRequest updateChapterRequest
+    ) {
+        Book book = bookTokenService.findBookByToken(rawToken).orElse(null);
+        if (book == null || !book.getId().equals(bookId)) {
+            return Optional.empty();
+        }
+
+        Chapter chapter = chapterRepository.findById(chapterId).orElse(null);
+        if (chapter == null || !chapter.getBook().getId().equals(bookId)) {
+            return Optional.empty();
+        }
+
+        if (updateChapterRequest.title() != null) {
+            chapter.setTitle(updateChapterRequest.title());
+        }
+        if (updateChapterRequest.content() != null) {
+            chapter.setContent(updateChapterRequest.content());
+        }
+
+        chapter = chapterRepository.save(chapter);
+
+        return Optional.of(toChapterResponse(chapter));
     }
 }

@@ -1,6 +1,7 @@
 package io.github.ssingh03_dev.nextchapter.controller;
 
 import io.github.ssingh03_dev.nextchapter.dto.request.CreateChapterRequest;
+import io.github.ssingh03_dev.nextchapter.dto.request.UpdateChapterRequest;
 import io.github.ssingh03_dev.nextchapter.dto.response.ChapterResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.ChapterSummaryResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.CreateChapterResponse;
@@ -56,5 +57,18 @@ public class ChapterController {
     @GetMapping
     public List<ChapterSummaryResponse> getChapters(@PathVariable Long bookId) {
         return chapterService.getChapters(bookId);
+    }
+
+    @PatchMapping("/{chapterId}")
+    public ResponseEntity<ChapterResponse> updateChapter(
+            @PathVariable Long bookId, @PathVariable Long chapterId,
+            @RequestHeader("Authorization") String bearerToken,
+            @RequestBody UpdateChapterRequest updateChapterRequest
+    ) {
+        String rawToken = bearerToken.replace("Bearer ", "");
+
+        return chapterService.updateChapter(bookId, chapterId, rawToken, updateChapterRequest)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 }

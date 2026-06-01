@@ -47,10 +47,12 @@ public class BookTokenService {     // generate, hash, store, validate, revoke t
     public String getNewToken(Long bookId) {
         Book book = bookRepository.findById(bookId)
                 .orElseThrow(() -> new RuntimeException("Book not found"));
-        String prefix = book.getTitle()
-                .trim()
-                .toLowerCase()
-                .replaceAll("\\s+", "-");
+//        String prefix = book.getTitle()
+//                .trim()
+//                .toLowerCase()
+//                .replaceAll("\\s+", "-");
+        // book title is not unique, so we need to use book id instead
+        String prefix = "bk_" + book.getId().toString();
 
         String rawToken = prefix + "_" + generateRawToken();
         String hashToken = hashRawToken(rawToken);
