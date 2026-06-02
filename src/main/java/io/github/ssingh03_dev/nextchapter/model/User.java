@@ -29,9 +29,9 @@ public class User {     // only for users reading the book, publishers use token
         return id;
     }
 
-    public void setId(Long id) {
-        this.id = id;
-    }
+//    public void setId(Long id) {
+//        this.id = id;
+//    }
 
     public String getEmail() {
         return email;

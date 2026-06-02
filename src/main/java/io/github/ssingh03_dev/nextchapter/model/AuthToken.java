@@ -1,6 +1,8 @@
 package io.github.ssingh03_dev.nextchapter.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
@@ -8,32 +10,35 @@ import org.hibernate.annotations.OnDeleteAction;
 import java.time.Instant;
 
 @Entity
-@Table(name = "book_tokens")
-public class BookToken {
+@Table(name = "auth_tokens")
+public class AuthToken {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id", nullable = false)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @NotNull
+    @OneToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "book_id", nullable = false)
-    private Book book;
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
+    @Size(max = 255)
+    @NotNull
     @Column(name = "token_hash", nullable = false)
     private String tokenHash;
 
-    @Column(name = "token_prefix", length = 50)
-    private String tokenPrefix;
-
+    @NotNull
     @ColumnDefault("true")
     @Column(name = "active", nullable = false)
     private Boolean active;
 
+    @NotNull
     @ColumnDefault("now()")
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @ColumnDefault("(created_at + '00:20:00')")
     @Column(name = "expires_at")
     private Instant expiresAt;
 
@@ -45,12 +50,12 @@ public class BookToken {
 //        this.id = id;
 //    }
 
-    public Book getBook() {
-        return book;
+    public User getUser() {
+        return user;
     }
 
-    public void setBook(Book book) {
-        this.book = book;
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public String getTokenHash() {
@@ -59,14 +64,6 @@ public class BookToken {
 
     public void setTokenHash(String tokenHash) {
         this.tokenHash = tokenHash;
-    }
-
-    public String getTokenPrefix() {
-        return tokenPrefix;
-    }
-
-    public void setTokenPrefix(String tokenPrefix) {
-        this.tokenPrefix = tokenPrefix;
     }
 
     public Boolean getActive() {
@@ -89,8 +86,8 @@ public class BookToken {
         return expiresAt;
     }
 
-    public void setExpiresAt(Instant expiresAt) {
-        this.expiresAt = expiresAt;
-    }
+//    public void setExpiresAt(Instant expiresAt) {
+//        this.expiresAt = expiresAt;
+//    }
 
 }
