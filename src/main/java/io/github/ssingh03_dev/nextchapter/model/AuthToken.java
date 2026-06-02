@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -39,7 +41,8 @@ public class AuthToken {
     private Instant createdAt;
 
     @ColumnDefault("(created_at + '00:20:00')")
-    @Column(name = "expires_at")
+    @Generated(event = {EventType.INSERT, EventType.UPDATE})
+    @Column(name = "expires_at", insertable = false, updatable = false)
     private Instant expiresAt;
 
     public Long getId() {

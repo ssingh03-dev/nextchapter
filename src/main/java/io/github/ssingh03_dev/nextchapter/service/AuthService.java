@@ -1,29 +1,29 @@
 package io.github.ssingh03_dev.nextchapter.service;
 
+import io.github.ssingh03_dev.nextchapter.dto.response.AuthTokenResponse;
+import io.github.ssingh03_dev.nextchapter.model.AuthToken;
 import io.github.ssingh03_dev.nextchapter.model.User;
 import io.github.ssingh03_dev.nextchapter.repository.UserRepository;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.util.Properties;
+import java.util.Optional;
 
 @Service
 public class AuthService {
     private final UserRepository userRepository;
-
-    // below used it for testing, from testing environment or fake
-    // also, the setup session once in contructor so it can time out
-    private final String from = "testing123@gmail.com";
+    private final AuthTokenService authTokenService;
 
     private final JavaMailSender mailSender;
 
-    public AuthService(UserRepository userRepository, JavaMailSender mailSender) {
+    public AuthService(UserRepository userRepository, AuthTokenService authTokenService, JavaMailSender mailSender) {
         this.userRepository = userRepository;
+        this.authTokenService = authTokenService;
         this.mailSender = mailSender;
     }
 
@@ -43,13 +43,17 @@ public class AuthService {
     * token is one-time use and expires in 20 minutes
     */
 
-    private void emailToken(String to, String token, Timestamp expiresAt) {
-        LocalDateTime expiry = expiresAt.toLocalDateTime();
+    private void emailToken(String to, String token, Instant expiresAt) {
+        LocalDateTime expiry = LocalDateTime.ofInstant(expiresAt, ZoneId.systemDefault());
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         String formattedExpiry = expiry.format(formatter);
 
         SimpleMailMessage message = new SimpleMailMessage();
+        // below used it for testing, from testing environment or fake
+        // also, the setup session once in constructor so it can time out
+        // can configure hardcoded stuff into applications.properties through javamailer
+        String from = "testing123@gmail.com";
         message.setFrom(from);
         message.setTo(to);
         message.setSubject("Token - Expires in 20 Minutes");
@@ -68,10 +72,20 @@ public class AuthService {
                 });
 
         // get token from authTokenService
-        // first find token by email, if there is check if active or expired
+        // first find if users token already exists, if there is check if active or expired
         // if inactive or expired, create new token, add hash to old token row and update everything else accordingly, and email the rawtoken
         // if neither then do nothing
         // if no token for email exists, generate new one and add it as a new row
         // emailToken(email, token);
+
+        Optional<AuthTokenResponse> authTokenResponse = authTokenService.getToken(user);
+
+        if (authTokenResponse.isPresent()) {
+            String token = authTokenResponse.get().rawToken();
+            AuthToken authToken = authTokenResponse.get().authToken();
+            emailToken(user.getEmail(), token, authToken.getExpiresAt());
+        }
+
+
     }
 }
