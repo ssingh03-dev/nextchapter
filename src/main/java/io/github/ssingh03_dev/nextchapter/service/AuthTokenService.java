@@ -88,4 +88,15 @@ public class AuthTokenService {
         // user token does not exist in the database, create new row and issue token
         return Optional.of(createNewToken(user));
     }
+
+    public boolean isTokenUsable(String rawToken) {
+        if (rawToken == null || rawToken.isBlank()) return false;
+
+        String hashedToken = hashRawToken(rawToken);
+
+        return authTokenRepository.findByTokenHash(hashedToken)
+                .filter(AuthToken::getActive)
+                .filter(authToken -> authToken.getExpiresAt().isAfter(Instant.now()))
+                .isPresent();
+    }
 }

@@ -8,4 +8,6 @@ import java.util.Optional;
 
 public interface AuthTokenRepository extends JpaRepository<AuthToken, Long> {
     Optional<AuthToken> findByUser(User user);
+
+    Optional<AuthToken> findByTokenHash(String token_hash);
 }
