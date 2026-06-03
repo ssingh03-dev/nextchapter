@@ -1,5 +1,7 @@
 package io.github.ssingh03_dev.nextchapter.model;
 
+import io.github.ssingh03_dev.nextchapter.converter.DeliveryDaySetConverter;
+import io.github.ssingh03_dev.nextchapter.enums.DeliveryDay;
 import jakarta.persistence.*;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
@@ -7,6 +9,7 @@ import org.hibernate.annotations.OnDeleteAction;
 
 import java.time.Instant;
 import java.time.LocalTime;
+import java.util.Set;
 
 @Entity
 @Table(name = "subscriptions")
@@ -30,8 +33,9 @@ public class Subscription {
     @Column(name = "current_chapter_number", nullable = false)
     private Integer currentChapterNumber;
 
+    @Convert(converter = DeliveryDaySetConverter.class)
     @Column(name = "delivery_days", nullable = false, length = 50)
-    private String deliveryDays;
+    private Set<DeliveryDay> deliveryDays;
 
     @Column(name = "delivery_time", nullable = false)
     private LocalTime deliveryTime;
@@ -76,11 +80,11 @@ public class Subscription {
         this.currentChapterNumber = currentChapterNumber;
     }
 
-    public String getDeliveryDays() {
+    public Set<DeliveryDay> getDeliveryDays() {
         return deliveryDays;
     }
 
-    public void setDeliveryDays(String deliveryDays) {
+    public void setDeliveryDays(Set<DeliveryDay> deliveryDays) {
         this.deliveryDays = deliveryDays;
     }
 

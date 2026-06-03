@@ -89,14 +89,13 @@ public class AuthTokenService {
         return Optional.of(createNewToken(user));
     }
 
-    public boolean isTokenUsable(String rawToken) {
-        if (rawToken == null || rawToken.isBlank()) return false;
+    public Optional<AuthToken> getUsableToken(String rawToken) {
+        if (rawToken == null || rawToken.isBlank()) return Optional.empty();
 
         String hashedToken = hashRawToken(rawToken);
 
         return authTokenRepository.findByTokenHash(hashedToken)
                 .filter(AuthToken::getActive)
-                .filter(authToken -> authToken.getExpiresAt().isAfter(Instant.now()))
-                .isPresent();
+                .filter(authToken -> authToken.getExpiresAt().isAfter(Instant.now()));
     }
 }
