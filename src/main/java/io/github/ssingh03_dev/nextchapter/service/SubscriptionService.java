@@ -1,5 +1,6 @@
 package io.github.ssingh03_dev.nextchapter.service;
 
+import io.github.ssingh03_dev.nextchapter.dto.request.UpdateSubscriptionRequest;
 import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionDetailResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionMutationResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionSummaryResponse;
@@ -144,5 +145,50 @@ public class SubscriptionService {
                 .stream()
                 .map(this::toSubscriptionSummaryResponse)
                 .toList()).orElseGet(List::of);
+    }
+
+    // update method, one needed since it's a patch
+
+    public SubscriptionMutationResponse updateSubscription(
+            String rawToken, Long id, UpdateSubscriptionRequest updateSubscriptionRequest
+    ) {
+        Optional<AuthToken> authToken = authTokenService.getUsableToken(rawToken);
+
+        if (authToken.isEmpty()) {
+            return new SubscriptionMutationResponse(
+                    false,
+                    "Token unusable.",
+                    null
+            );
+        }
+
+        Optional<Subscription> subscriptionOptional = subscriptionRepository
+                .findByIdAndUserId(id, authToken.get().getUser().getId());
+
+        if (subscriptionOptional.isEmpty()) {
+            return new SubscriptionMutationResponse(
+                    false,
+                    "Subscription does not exist.",
+                    null
+            );
+        }
+
+        Subscription subscription = subscriptionOptional.get();
+
+        if (updateSubscriptionRequest.deliveryDays() != null) {
+            subscription.setDeliveryDays(updateSubscriptionRequest.deliveryDays());
+        }
+
+        if (updateSubscriptionRequest.deliveryTime() != null) {
+            subscription.setDeliveryTime(updateSubscriptionRequest.deliveryTime());
+        }
+
+        subscriptionRepository.save(subscription);
+
+        return new SubscriptionMutationResponse(
+                true,
+                "Subscription has been updated.",
+                toSubscriptionDetailResponse(subscription)
+        );
     }
 }
