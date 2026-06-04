@@ -29,7 +29,7 @@ public class SubscriptionService {
     private final AuthTokenService authTokenService;
     private final BookRepository bookRepository;
 
-    public SubscriptionService(SubscriptionRepository subscriptionRepository, AuthTokenService authTokenService, BookService bookService, BookRepository bookRepository) {
+    public SubscriptionService(SubscriptionRepository subscriptionRepository, AuthTokenService authTokenService, BookRepository bookRepository) {
         this.subscriptionRepository = subscriptionRepository;
         this.authTokenService = authTokenService;
         this.bookRepository = bookRepository;
@@ -79,7 +79,8 @@ public class SubscriptionService {
             );
         }
 
-        User user = authToken.get().getUser();
+        AuthToken usableToken = authToken.get();
+        User user = usableToken.getUser();
 
         if (subscriptionRepository
                 .findByUserIdAndBookId(user.getId(), bookId)
@@ -101,6 +102,9 @@ public class SubscriptionService {
         subscription.setCreatedAt(Instant.now());
 
         subscription = subscriptionRepository.save(subscription);
+
+        // make authtoken token become inactive since it was used; probably authTokenService method
+        authTokenService.revokeToken(usableToken);
 
         return new SubscriptionMutationResponse(
                 true,

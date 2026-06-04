@@ -98,4 +98,9 @@ public class AuthTokenService {
                 .filter(AuthToken::getActive)
                 .filter(authToken -> authToken.getExpiresAt().isAfter(Instant.now()));
     }
+
+    public void revokeToken(AuthToken authToken) {
+        authToken.setActive(false);
+        authTokenRepository.save(authToken);
+    }
 }

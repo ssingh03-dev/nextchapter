@@ -6,9 +6,11 @@ import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@RequestMapping("/auth")
 public class AuthController {
 
     private final AuthService authService;
@@ -17,7 +19,7 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping("/auth/request-link")
+    @PostMapping("/request-link")
     public ResponseEntity<String> requestLink(@Valid @RequestBody RequestLinkRequest requestLinkRequest) {
         authService.requestLink(requestLinkRequest.email());
         return ResponseEntity.ok("If the email can be used to sign in, a link has been sent.");
