@@ -2,6 +2,7 @@ package io.github.ssingh03_dev.nextchapter.service;
 
 import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionDetailResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionMutationResponse;
+import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionSummaryResponse;
 import io.github.ssingh03_dev.nextchapter.enums.DeliveryDay;
 import io.github.ssingh03_dev.nextchapter.model.AuthToken;
 import io.github.ssingh03_dev.nextchapter.model.Book;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.time.LocalTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -52,6 +54,16 @@ public class SubscriptionService {
                 subscription.getDeliveryDays().toString(),
                 subscription.getDeliveryTime(),
                 subscription.getCreatedAt(),
+                subscription.getActive()
+        );
+    }
+
+    private SubscriptionSummaryResponse toSubscriptionSummaryResponse(Subscription subscription) {
+        return new SubscriptionSummaryResponse(
+                subscription.getId(),
+                subscription.getBook().getId(),
+                subscription.getBook().getTitle(),
+                subscription.getBook().getAuthor(),
                 subscription.getActive()
         );
     }
@@ -112,5 +124,25 @@ public class SubscriptionService {
                 toSubscriptionDetailResponse(subscription)
         );
 
+    }
+
+    // get methods
+    // verify with token, but do not use/revoke it
+
+    public Optional<SubscriptionDetailResponse> getSubscriptionById(String rawToken, Long id) {
+        Optional<AuthToken> authToken = authTokenService.getUsableToken(rawToken);
+
+        return authToken.flatMap(token -> subscriptionRepository
+                .findByIdAndUserId(id, token.getUser().getId())
+                .map(this::toSubscriptionDetailResponse));
+    }
+
+    public List<SubscriptionSummaryResponse> getSubscriptions(String rawToken) {
+        Optional<AuthToken> authToken = authTokenService.getUsableToken(rawToken);
+
+        return authToken.map(token -> subscriptionRepository.findByUserId(token.getUser().getId())
+                .stream()
+                .map(this::toSubscriptionSummaryResponse)
+                .toList()).orElseGet(List::of);
     }
 }

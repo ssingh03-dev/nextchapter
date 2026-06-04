@@ -1,10 +1,15 @@
 package io.github.ssingh03_dev.nextchapter.controller;
 
 import io.github.ssingh03_dev.nextchapter.dto.request.CreateSubscriptionRequest;
+import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionDetailResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionMutationResponse;
+import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionSummaryResponse;
 import io.github.ssingh03_dev.nextchapter.service.SubscriptionService;
 import jakarta.validation.Valid;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/subs")
@@ -28,5 +33,25 @@ public class SubscriptionController {
                 createSubscriptionRequest.deliveryDays(),
                 createSubscriptionRequest.deliveryTime()
         );
+    }
+
+    // for now invalid token is handled as not found like subscription not found
+    @GetMapping("/{subId}")
+    public ResponseEntity<SubscriptionDetailResponse> getSubscriptionById(
+            @RequestHeader("Authorization") String bearerToken,
+            @PathVariable Long subId
+    ) {
+        String rawToken = bearerToken.replace("Bearer ", "");
+        return subscriptionService.getSubscriptionById(rawToken, subId)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping
+    public List<SubscriptionSummaryResponse> getSubscriptions(
+            @RequestHeader("Authorization") String bearerToken
+    ) {
+        String rawToken = bearerToken.replace("Bearer ", "");
+        return subscriptionService.getSubscriptions(rawToken);
     }
 }
