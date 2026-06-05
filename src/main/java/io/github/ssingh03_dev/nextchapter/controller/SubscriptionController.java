@@ -1,6 +1,7 @@
 package io.github.ssingh03_dev.nextchapter.controller;
 
 import io.github.ssingh03_dev.nextchapter.dto.request.CreateSubscriptionRequest;
+import io.github.ssingh03_dev.nextchapter.dto.request.UpdateSubscriptionRequest;
 import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionDetailResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionMutationResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionSummaryResponse;
@@ -53,5 +54,15 @@ public class SubscriptionController {
     ) {
         String rawToken = bearerToken.replace("Bearer ", "");
         return subscriptionService.getSubscriptions(rawToken);
+    }
+
+    @PatchMapping("/{subId}")
+    public SubscriptionMutationResponse updateSubscription(
+            @RequestHeader("Authorization") String bearerToken,
+            @PathVariable Long subId,
+            @RequestBody UpdateSubscriptionRequest updateSubscriptionRequest
+            ) {
+        String rawToken = bearerToken.replace("Bearer ", "");
+        return subscriptionService.updateSubscription(rawToken, subId, updateSubscriptionRequest);
     }
 }

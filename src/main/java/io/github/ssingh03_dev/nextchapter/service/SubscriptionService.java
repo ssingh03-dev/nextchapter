@@ -185,6 +185,8 @@ public class SubscriptionService {
 
         subscriptionRepository.save(subscription);
 
+        authTokenService.revokeToken(authToken.get());
+
         return new SubscriptionMutationResponse(
                 true,
                 "Subscription has been updated.",
