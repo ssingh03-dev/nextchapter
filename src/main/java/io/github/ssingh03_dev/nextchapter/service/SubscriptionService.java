@@ -183,6 +183,10 @@ public class SubscriptionService {
             subscription.setDeliveryTime(updateSubscriptionRequest.deliveryTime());
         }
 
+        if (updateSubscriptionRequest.active() != null) {
+            subscription.setActive(updateSubscriptionRequest.active());
+        }
+
         subscriptionRepository.save(subscription);
 
         authTokenService.revokeToken(authToken.get());

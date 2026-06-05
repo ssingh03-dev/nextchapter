@@ -7,6 +7,7 @@ import java.util.Set;
 
 public record UpdateSubscriptionRequest(
         Set<DeliveryDay> deliveryDays,
-        LocalTime deliveryTime
+        LocalTime deliveryTime,
+        Boolean active
 ) {
 }
