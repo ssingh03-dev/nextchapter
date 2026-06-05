@@ -65,4 +65,13 @@ public class SubscriptionController {
         String rawToken = bearerToken.replace("Bearer ", "");
         return subscriptionService.updateSubscription(rawToken, subId, updateSubscriptionRequest);
     }
+
+    @DeleteMapping("/{subId}")
+    public SubscriptionMutationResponse deleteSubscription(
+            @RequestHeader("Authorization") String bearerToken,
+            @PathVariable Long subId
+    ) {
+        String rawToken = bearerToken.replace("Bearer ", "");
+        return subscriptionService.deleteSubscription(rawToken, subId);
+    }
 }

@@ -197,4 +197,38 @@ public class SubscriptionService {
                 toSubscriptionDetailResponse(subscription)
         );
     }
+
+    public SubscriptionMutationResponse deleteSubscription(String rawToken, Long id) {
+        Optional<AuthToken> authToken = authTokenService.getUsableToken(rawToken);
+
+        if (authToken.isEmpty()) {
+            return new SubscriptionMutationResponse(
+                    false,
+                    "Token unusable.",
+                    null
+            );
+        }
+
+        Optional<Subscription> subscriptionOptional = subscriptionRepository
+                .findByIdAndUserId(id, authToken.get().getUser().getId());
+
+        if (subscriptionOptional.isEmpty()) {
+            return new SubscriptionMutationResponse(
+                    false,
+                    "Subscription does not exist.",
+                    null
+            );
+        }
+
+        Subscription subscription = subscriptionOptional.get();
+        subscriptionRepository.delete(subscription);
+
+        authTokenService.revokeToken(authToken.get());
+
+        return new SubscriptionMutationResponse(
+                true,
+                "Subscription has been deleted.",
+                toSubscriptionDetailResponse(subscription)
+        );
+    }
 }
