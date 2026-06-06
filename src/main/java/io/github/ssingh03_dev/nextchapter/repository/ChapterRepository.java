@@ -16,6 +16,7 @@ public interface ChapterRepository extends JpaRepository<Chapter, Long> {
     List<Chapter> findByBookIdOrderByChapterNumberAsc(Long bookId);
 
     // below is for aftermath of deleting a chapter; hence chapter number is the deleted one
+    // can be used in subscription, like getting all new chapters after the current one
     List<Chapter> findByBookIdAndChapterNumberGreaterThanOrderByChapterNumberAsc(
             Long bookId,
             Integer chapterNumber

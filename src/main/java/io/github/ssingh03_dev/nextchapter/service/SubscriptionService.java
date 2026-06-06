@@ -5,16 +5,19 @@ import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionDetailRespons
 import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionMutationResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.SubscriptionSummaryResponse;
 import io.github.ssingh03_dev.nextchapter.enums.DeliveryDay;
-import io.github.ssingh03_dev.nextchapter.model.AuthToken;
-import io.github.ssingh03_dev.nextchapter.model.Book;
-import io.github.ssingh03_dev.nextchapter.model.Subscription;
-import io.github.ssingh03_dev.nextchapter.model.User;
+import io.github.ssingh03_dev.nextchapter.model.*;
 import io.github.ssingh03_dev.nextchapter.repository.BookRepository;
+import io.github.ssingh03_dev.nextchapter.repository.ChapterRepository;
 import io.github.ssingh03_dev.nextchapter.repository.SubscriptionRepository;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 
+import java.time.DayOfWeek;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalTime;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -31,11 +34,17 @@ public class SubscriptionService {
     private final SubscriptionRepository subscriptionRepository;
     private final AuthTokenService authTokenService;
     private final BookRepository bookRepository;
+    private final SubscriptionAsyncService subscriptionAsyncService;
+    private final ChapterRepository chapterRepository;
+    private final JavaMailSender mailSender;
 
-    public SubscriptionService(SubscriptionRepository subscriptionRepository, AuthTokenService authTokenService, BookRepository bookRepository) {
+    public SubscriptionService(SubscriptionRepository subscriptionRepository, AuthTokenService authTokenService, BookRepository bookRepository, SubscriptionAsyncService subscriptionAsyncService, ChapterRepository chapterRepository, JavaMailSender mailSender) {
         this.subscriptionRepository = subscriptionRepository;
         this.authTokenService = authTokenService;
         this.bookRepository = bookRepository;
+        this.subscriptionAsyncService = subscriptionAsyncService;
+        this.chapterRepository = chapterRepository;
+        this.mailSender = mailSender;
     }
 
     // probably create dto for subscription
@@ -108,7 +117,7 @@ public class SubscriptionService {
         Subscription subscription = new Subscription();
         subscription.setUser(user);
         subscription.setBook(book);
-        subscription.setCurrentChapterNumber(1);
+        subscription.setCurrentChapterNumber(0);
         subscription.setDeliveryDays(deliveryDays);
         subscription.setDeliveryTime(deliveryTime);
         subscription.setActive(true);
@@ -230,5 +239,77 @@ public class SubscriptionService {
                 "Subscription has been deleted.",
                 toSubscriptionDetailResponse(subscription)
         );
+    }
+
+    public void checkDueSubscriptions() {
+        // 1. Get today's date
+        LocalDate today = LocalDate.now();
+
+        // 2. Get the DayOfWeek object (e.g., SATURDAY)
+        DayOfWeek dayOfWeek = today.getDayOfWeek();
+
+        // 3. Match it to your custom DeliveryDay enum
+        DeliveryDay todayDelivery = DeliveryDay.valueOf(dayOfWeek.name());
+
+        LocalTime now = LocalTime.now().truncatedTo(ChronoUnit.MINUTES);
+
+        List<Subscription> dueSubscriptions = subscriptionRepository
+                .findDueSubscriptions(todayDelivery.toString(), now);
+
+        for (Subscription subscription : dueSubscriptions) {
+            subscriptionAsyncService.processSubscriptionAsync(subscription);
+        }
+    }
+
+    public void processDueSubscription(Subscription subscription) {
+        List<Chapter> chapters = chapterRepository
+                .findByBookIdAndChapterNumberGreaterThanOrderByChapterNumberAsc(
+                        subscription.getBook().getId(),
+                        subscription.getCurrentChapterNumber()
+                );
+
+        if (chapters.isEmpty()) return;
+
+        SimpleMailMessage message = new SimpleMailMessage();
+        // below used it for testing, from testing environment or fake
+        // also, the setup session once in constructor so it can time out
+        // can configure hardcoded stuff into applications.properties through javamailer
+        String from = "subscribedChapters@gmail.com";
+        String to = subscription.getUser().getEmail();
+        message.setFrom(from);
+        message.setTo(to);
+        message.setSubject(String.format(
+                "New Chapters for [%s] - Chapters {%d} to {%d}",
+                subscription.getBook().getTitle(),
+                chapters.getFirst().getChapterNumber(),
+                chapters.getLast().getChapterNumber()
+        ));
+
+        String body = String.format("""
+                Hello,
+                
+                New chapters are available for your subscription:
+                
+                Book Title: %s
+                Author: %s
+                
+                """,
+                subscription.getBook().getTitle(),
+                subscription.getBook().getAuthor());
+        for (Chapter chapter : chapters) {
+            body += String.format("""
+                    Chapter %d: %s
+                    
+                    %s
+                    
+                    """,
+                    chapter.getChapterNumber(),
+                    chapter.getTitle(),
+                    chapter.getContent());
+        }
+
+        message.setText(body);
+
+        mailSender.send(message);
     }
 }
