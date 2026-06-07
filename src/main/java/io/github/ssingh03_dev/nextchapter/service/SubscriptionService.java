@@ -257,59 +257,7 @@ public class SubscriptionService {
                 .findDueSubscriptions(todayDelivery.toString(), now);
 
         for (Subscription subscription : dueSubscriptions) {
-            subscriptionAsyncService.processSubscriptionAsync(subscription);
+            subscriptionAsyncService.processSubscriptionAsync(subscription.getId());
         }
-    }
-
-    public void processDueSubscription(Subscription subscription) {
-        List<Chapter> chapters = chapterRepository
-                .findByBookIdAndChapterNumberGreaterThanOrderByChapterNumberAsc(
-                        subscription.getBook().getId(),
-                        subscription.getCurrentChapterNumber()
-                );
-
-        if (chapters.isEmpty()) return;
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        // below used it for testing, from testing environment or fake
-        // also, the setup session once in constructor so it can time out
-        // can configure hardcoded stuff into applications.properties through javamailer
-        String from = "subscribedChapters@gmail.com";
-        String to = subscription.getUser().getEmail();
-        message.setFrom(from);
-        message.setTo(to);
-        message.setSubject(String.format(
-                "New Chapters for [%s] - Chapters {%d} to {%d}",
-                subscription.getBook().getTitle(),
-                chapters.getFirst().getChapterNumber(),
-                chapters.getLast().getChapterNumber()
-        ));
-
-        String body = String.format("""
-                Hello,
-                
-                New chapters are available for your subscription:
-                
-                Book Title: %s
-                Author: %s
-                
-                """,
-                subscription.getBook().getTitle(),
-                subscription.getBook().getAuthor());
-        for (Chapter chapter : chapters) {
-            body += String.format("""
-                    Chapter %d: %s
-                    
-                    %s
-                    
-                    """,
-                    chapter.getChapterNumber(),
-                    chapter.getTitle(),
-                    chapter.getContent());
-        }
-
-        message.setText(body);
-
-        mailSender.send(message);
     }
 }
