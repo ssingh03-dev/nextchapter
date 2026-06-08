@@ -75,3 +75,5 @@ public class SubscriptionController {
         return subscriptionService.deleteSubscription(rawToken, subId);
     }
 }
+
+// TODO revamp token to spring security level so swagger can work with it
