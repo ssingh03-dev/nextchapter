@@ -4,9 +4,12 @@ import io.github.ssingh03_dev.nextchapter.model.Chapter;
 import io.github.ssingh03_dev.nextchapter.model.Subscription;
 import io.github.ssingh03_dev.nextchapter.repository.ChapterRepository;
 import io.github.ssingh03_dev.nextchapter.repository.SubscriptionRepository;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
 import jakarta.transaction.Transactional;
-import org.springframework.mail.SimpleMailMessage;
+import org.jspecify.annotations.NonNull;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
@@ -25,61 +28,74 @@ public class SubscriptionAsyncService {
         this.subscriptionRepository = subscriptionRepository;
     }
 
-    @Async("subscriptionTaskExecutor")
-    @Transactional
-    public void processSubscriptionAsync(Long subId) {
-        Subscription subscription = subscriptionRepository.findById(subId).orElseThrow();
-
-        List<Chapter> chapters = chapterRepository
-                .findByBookIdAndChapterNumberGreaterThanOrderByChapterNumberAsc(
-                        subscription.getBook().getId(),
-                        subscription.getCurrentChapterNumber()
-                );
-
-        if (chapters.isEmpty()) return;
-
-        SimpleMailMessage message = new SimpleMailMessage();
-        // below used it for testing, from testing environment or fake
-        // also, the setup session once in constructor so it can time out
-        // can configure hardcoded stuff into applications.properties through javamailer
-        String from = "subscribedChapters@gmail.com";
-        String to = subscription.getUser().getEmail();
-        message.setFrom(from);
-        message.setTo(to);
-        message.setSubject(String.format(
-                "New Chapters for [%s] - Chapters {%d} to {%d}",
-                subscription.getBook().getTitle(),
-                chapters.getFirst().getChapterNumber(),
-                chapters.getLast().getChapterNumber()
-        ));
-
+    private static @NonNull StringBuilder getBody(Subscription subscription, List<Chapter> chapters) {
         StringBuilder body = new StringBuilder(String.format("""
-                        Hello,
+                        <p>Hello,</p>
                         
-                        New chapters are available for your subscription:
+                        <p>New chapters are available for your subscription:</p>
                         
-                        Book Title: %s
-                        Author: %s
+                        <h2>%s</h2>
+                        <p><strong>Author:</strong> %s</p>
                         
                         """,
                 subscription.getBook().getTitle(),
                 subscription.getBook().getAuthor()));
         for (Chapter chapter : chapters) {
             body.append(String.format("""
-                            Chapter %d: %s
-                            
-                            %s
-                            
+                            <p><strong>Chapter %d: %s</strong></p>
+                            <p>%s</p>
+                            <hr>
                             """,
                     chapter.getChapterNumber(),
                     chapter.getTitle(),
                     chapter.getContent()));
         }
-
-        message.setText(body.toString());
-
-        mailSender.send(message);
-
-        subscription.setCurrentChapterNumber(chapters.getLast().getChapterNumber());
+        return body;
     }
+
+    @Async("subscriptionTaskExecutor")
+    @Transactional
+    public void processSubscriptionAsync(Long subId) {      // should not stop other emails
+        try {
+            Subscription subscription = subscriptionRepository.findById(subId).orElseThrow();
+
+            List<Chapter> chapters = chapterRepository
+                    .findByBookIdAndChapterNumberGreaterThanOrderByChapterNumberAsc(
+                            subscription.getBook().getId(),
+                            subscription.getCurrentChapterNumber()
+                    );
+
+            if (chapters.isEmpty()) return;
+
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            // below used it for testing, from testing environment or fake
+            // also, the setup session once in constructor so it can time out
+            // can configure hardcoded stuff into applications.properties through javamailer
+
+            String from = "subscribedChapters@gmail.com";
+            String to = subscription.getUser().getEmail();
+
+            helper.setFrom(from);
+            helper.setTo(to);
+            helper.setSubject(String.format(
+                    "New Chapters for [%s] - Chapters {%d} to {%d}",
+                    subscription.getBook().getTitle(),
+                    chapters.getFirst().getChapterNumber(),
+                    chapters.getLast().getChapterNumber()
+            ));
+
+            StringBuilder body = getBody(subscription, chapters);
+            helper.setText(body.toString(), true);
+
+            mailSender.send(message);
+
+            subscription.setCurrentChapterNumber(chapters.getLast().getChapterNumber());
+        } catch (MessagingException e) {
+            e.printStackTrace();
+        }
+    }
+
+
 }

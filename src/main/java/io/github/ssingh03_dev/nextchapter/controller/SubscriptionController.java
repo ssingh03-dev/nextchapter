@@ -51,8 +51,11 @@ public class SubscriptionController {
     @GetMapping
     public List<SubscriptionSummaryResponse> getSubscriptions(
             @RequestHeader("Authorization") String bearerToken
+//            Authentication authentication
     ) {
         String rawToken = bearerToken.replace("Bearer ", "");
+//        Jwt jwt = (Jwt) authentication.getPrincipal();
+//        String rawToken = jwt.ge;
         return subscriptionService.getSubscriptions(rawToken);
     }
 
