@@ -8,6 +8,8 @@ import jakarta.mail.MessagingException;
 import jakarta.mail.internet.MimeMessage;
 import jakarta.transaction.Transactional;
 import org.jspecify.annotations.NonNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -21,11 +23,33 @@ public class SubscriptionAsyncService {
     private final ChapterRepository chapterRepository;
     private final JavaMailSender mailSender;
     private final SubscriptionRepository subscriptionRepository;
+    private static final Logger log = LoggerFactory.getLogger(SubscriptionAsyncService.class);
 
     public SubscriptionAsyncService(ChapterRepository chapterRepository, JavaMailSender mailSender, SubscriptionRepository subscriptionRepository) {
         this.chapterRepository = chapterRepository;
         this.mailSender = mailSender;
         this.subscriptionRepository = subscriptionRepository;
+    }
+
+    private static @NonNull MimeMessageHelper getMimeMessageHelper(MimeMessage message, Subscription subscription, List<Chapter> chapters) throws MessagingException {
+        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+        // below used it for testing, from testing environment or fake
+        // also, the setup session once in constructor so it can time out
+        // can configure hardcoded stuff into applications.properties through javamailer
+
+        String from = "subscribedChapters@gmail.com";
+        String to = subscription.getUser().getEmail();
+
+        helper.setFrom(from);
+        helper.setTo(to);
+        helper.setSubject(String.format(
+                "New Chapters for [%s] - Chapters {%d} to {%d}",
+                subscription.getBook().getTitle(),
+                chapters.getFirst().getChapterNumber(),
+                chapters.getLast().getChapterNumber()
+        ));
+        return helper;
     }
 
     private static @NonNull StringBuilder getBody(Subscription subscription, List<Chapter> chapters) {
@@ -68,23 +92,7 @@ public class SubscriptionAsyncService {
             if (chapters.isEmpty()) return;
 
             MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true);
-
-            // below used it for testing, from testing environment or fake
-            // also, the setup session once in constructor so it can time out
-            // can configure hardcoded stuff into applications.properties through javamailer
-
-            String from = "subscribedChapters@gmail.com";
-            String to = subscription.getUser().getEmail();
-
-            helper.setFrom(from);
-            helper.setTo(to);
-            helper.setSubject(String.format(
-                    "New Chapters for [%s] - Chapters {%d} to {%d}",
-                    subscription.getBook().getTitle(),
-                    chapters.getFirst().getChapterNumber(),
-                    chapters.getLast().getChapterNumber()
-            ));
+            MimeMessageHelper helper = getMimeMessageHelper(message, subscription, chapters);
 
             StringBuilder body = getBody(subscription, chapters);
             helper.setText(body.toString(), true);
@@ -93,9 +101,7 @@ public class SubscriptionAsyncService {
 
             subscription.setCurrentChapterNumber(chapters.getLast().getChapterNumber());
         } catch (MessagingException e) {
-            e.printStackTrace();
+            log.error("Mime message error: ", e);
         }
     }
-
-
 }
