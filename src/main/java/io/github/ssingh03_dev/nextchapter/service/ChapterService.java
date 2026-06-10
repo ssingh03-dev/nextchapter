@@ -6,7 +6,10 @@ import io.github.ssingh03_dev.nextchapter.dto.response.ChapterSummaryResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.CreateChapterResponse;
 import io.github.ssingh03_dev.nextchapter.model.Book;
 import io.github.ssingh03_dev.nextchapter.model.Chapter;
+import io.github.ssingh03_dev.nextchapter.model.Subscription;
 import io.github.ssingh03_dev.nextchapter.repository.ChapterRepository;
+import io.github.ssingh03_dev.nextchapter.repository.SubscriptionRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -17,10 +20,12 @@ import java.util.Optional;
 public class ChapterService {
     private final BookTokenService bookTokenService;
     private final ChapterRepository chapterRepository;
+    private final SubscriptionRepository subscriptionRepository;
 
-    public ChapterService(BookTokenService bookTokenService, ChapterRepository chapterRepository) {
+    public ChapterService(BookTokenService bookTokenService, ChapterRepository chapterRepository, SubscriptionRepository subscriptionRepository) {
         this.bookTokenService = bookTokenService;
         this.chapterRepository = chapterRepository;
+        this.subscriptionRepository = subscriptionRepository;
     }
 
     private ChapterResponse toChapterResponse(Chapter chapter) {
@@ -113,6 +118,8 @@ public class ChapterService {
         return Optional.of(toChapterResponse(chapter));
     }
 
+    // TODO after chapter number becomes id in subscriber, add method to find in subscribtions where bookid and chapter id equals, then find chapter_number-1 id (null if 0)
+    @Transactional
     public boolean deleteChapter(Long bookId, Long chapterId, String rawToken) {
         Book book = bookTokenService.findBookByToken(rawToken).orElse(null);
         if (book == null || !book.getId().equals(bookId)) {
@@ -125,6 +132,24 @@ public class ChapterService {
         }
 
         int chapterNumber = chapter.getChapterNumber();
+
+        // if first chapter, deleting it makes foreign key null so no need to update subscriptions to null
+        if (chapterNumber > 1) {
+            // for subscriptions where last sent chapter id happened to be the one being deleted
+            List<Subscription> affectedSubscriptions = subscriptionRepository
+                    .findByBookIdAndLastSentChapterId(bookId, chapterId);
+
+            Chapter previousChapter = chapterRepository
+                    .findByBookIdAndChapterNumber(bookId, chapterNumber - 1)
+                    .orElse(null);
+
+            if (previousChapter != null) {  // should always be not null
+                for (Subscription subscription : affectedSubscriptions) {
+                    subscription.setLastSentChapter(previousChapter);
+                }
+                subscriptionRepository.saveAll(affectedSubscriptions);
+            }
+        }
 
         chapterRepository.delete(chapter);
 

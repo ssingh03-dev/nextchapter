@@ -48,6 +48,11 @@ public class Subscription {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @JoinColumn(name = "last_sent_chapter_id")
+    private Chapter lastSentChapter;
+
     public Long getId() {
         return id;
     }
@@ -110,6 +115,14 @@ public class Subscription {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Chapter getLastSentChapter() {
+        return lastSentChapter;
+    }
+
+    public void setLastSentChapter(Chapter lastSentChapter) {
+        this.lastSentChapter = lastSentChapter;
     }
 
 }

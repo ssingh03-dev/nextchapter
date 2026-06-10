@@ -20,6 +20,7 @@ public class Chapter {
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
+    // TODO change from mutable chapter number to immutable chapter id, but still use chapter numbers to get id
     @Column(name = "chapter_number", nullable = false)
     private Integer chapterNumber;
 

@@ -100,6 +100,9 @@ public class SubscriptionAsyncService {
             mailSender.send(message);
 
             subscription.setCurrentChapterNumber(chapters.getLast().getChapterNumber());
+            subscription.setLastSentChapter(chapters.getLast());
+
+            subscriptionRepository.save(subscription);
         } catch (MessagingException e) {
             log.error("Mime message error: ", e);
         }

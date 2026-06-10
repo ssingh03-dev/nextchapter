@@ -25,4 +25,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, Long
             AND s.deliveryTime = :time
     """)
     List<Subscription> findDueSubscriptions(@Param("day") String day, @Param("time") LocalTime time);
+
+    List<Subscription> findByBookIdAndLastSentChapterId(Long bookId, Long chapterId);
 }
