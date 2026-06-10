@@ -83,10 +83,14 @@ public class SubscriptionAsyncService {
         try {
             Subscription subscription = subscriptionRepository.findById(subId).orElseThrow();
 
+            Integer lastChapterNumber = subscription.getLastSentChapter() == null
+                    ? 0
+                    : subscription.getLastSentChapter().getChapterNumber();
+
             List<Chapter> chapters = chapterRepository
                     .findByBookIdAndChapterNumberGreaterThanOrderByChapterNumberAsc(
                             subscription.getBook().getId(),
-                            subscription.getCurrentChapterNumber()
+                            lastChapterNumber
                     );
 
             if (chapters.isEmpty()) return;
@@ -99,7 +103,6 @@ public class SubscriptionAsyncService {
 
             mailSender.send(message);
 
-            subscription.setCurrentChapterNumber(chapters.getLast().getChapterNumber());
             subscription.setLastSentChapter(chapters.getLast());
 
             subscriptionRepository.save(subscription);

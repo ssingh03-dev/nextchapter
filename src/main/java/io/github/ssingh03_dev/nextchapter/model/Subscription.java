@@ -29,10 +29,6 @@ public class Subscription {
     @JoinColumn(name = "book_id", nullable = false)
     private Book book;
 
-    @ColumnDefault("0")
-    @Column(name = "current_chapter_number", nullable = false)
-    private Integer currentChapterNumber;
-
     @Convert(converter = DeliveryDaySetConverter.class)
     @Column(name = "delivery_days", nullable = false, length = 50)
     private Set<DeliveryDay> deliveryDays;
@@ -75,14 +71,6 @@ public class Subscription {
 
     public void setBook(Book book) {
         this.book = book;
-    }
-
-    public Integer getCurrentChapterNumber() {
-        return currentChapterNumber;
-    }
-
-    public void setCurrentChapterNumber(Integer currentChapterNumber) {
-        this.currentChapterNumber = currentChapterNumber;
     }
 
     public Set<DeliveryDay> getDeliveryDays() {

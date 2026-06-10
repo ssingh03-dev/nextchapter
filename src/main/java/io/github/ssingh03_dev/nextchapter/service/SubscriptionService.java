@@ -117,7 +117,6 @@ public class SubscriptionService {
         Subscription subscription = new Subscription();
         subscription.setUser(user);
         subscription.setBook(book);
-        subscription.setCurrentChapterNumber(0);
         subscription.setDeliveryDays(deliveryDays);
         subscription.setDeliveryTime(deliveryTime);
         subscription.setActive(true);
