@@ -10,6 +10,7 @@ import jakarta.transaction.Transactional;
 import org.jspecify.annotations.NonNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.scheduling.annotation.Async;
@@ -24,15 +25,17 @@ public class SubscriptionAsyncService {
     private final JavaMailSender mailSender;
     private final SubscriptionRepository subscriptionRepository;
     private static final Logger log = LoggerFactory.getLogger(SubscriptionAsyncService.class);
+    private final SubscriptionPdfService subscriptionPdfService;
 
-    public SubscriptionAsyncService(ChapterRepository chapterRepository, JavaMailSender mailSender, SubscriptionRepository subscriptionRepository) {
+    public SubscriptionAsyncService(ChapterRepository chapterRepository, JavaMailSender mailSender, SubscriptionRepository subscriptionRepository, SubscriptionPdfService subscriptionPdfService) {
         this.chapterRepository = chapterRepository;
         this.mailSender = mailSender;
         this.subscriptionRepository = subscriptionRepository;
+        this.subscriptionPdfService = subscriptionPdfService;
     }
 
-    private static @NonNull MimeMessageHelper getMimeMessageHelper(MimeMessage message, Subscription subscription, List<Chapter> chapters) throws MessagingException {
-        MimeMessageHelper helper = new MimeMessageHelper(message, true);
+    private @NonNull MimeMessageHelper getMimeMessageHelper(MimeMessage message, Subscription subscription, List<Chapter> chapters) throws MessagingException {
+        MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
         // below used it for testing, from testing environment or fake
         // also, the setup session once in constructor so it can time out
@@ -49,6 +52,8 @@ public class SubscriptionAsyncService {
                 chapters.getFirst().getChapterNumber(),
                 chapters.getLast().getChapterNumber()
         ));
+        helper.addAttachment("latestChapters.pdf",
+                new ByteArrayResource(subscriptionPdfService.generateChaptersPdf(subscription, chapters)));
         return helper;
     }
 
