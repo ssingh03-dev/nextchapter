@@ -1,3 +1,4 @@
 # NextChapter
-#### Emails will no longer be autonomous with our online novel subscription model that sends novels through your email.
-Now picture this. You wake up, get ready and go to work, and the first thing you do? It's probably to check your emails. You know what we do? Send the latest chapters of your favourite book at scheduled times. So it looks like you're going through your email, but in reality, you're taking a quick morning read while booting up for actual work.
+## Your inbox is usually the same every morning. Why not change it up a bit?
+### Introducing the online novel subscription model, which delivers the latest chapters of your beloved novels into that same inbox.
+<strong>Picture this:</strong> you wake up, get ready, and head to work. The first thing you probably do is check your email. We turn that routine moment into something better by sending the latest chapters of your favourite novel at your preferred day and time. So while it may look like you’re just going through your inbox, you’re actually starting your morning with a quick read before the workday begins.
