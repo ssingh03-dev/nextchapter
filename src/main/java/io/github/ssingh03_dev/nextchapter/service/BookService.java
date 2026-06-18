@@ -31,8 +31,14 @@ public class BookService {      // add/update books, for now
         );
     }
 
+    // TODO update method so if book + author exists, do not add maybe return null
     @Transactional  // so no partial data is added to database, rolls back once a fail happens
     public CreateBookResponse addBook(String title, String author) {
+        // TODO for now, return null if already existing, then update dtos later on
+        if (bookRepository.findByTitleAndAuthor(title, author).isPresent()) {
+            return null;
+        }
+
         Book book = new Book();
         book.setTitle(title);
         book.setAuthor(author);
