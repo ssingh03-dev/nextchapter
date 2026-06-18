@@ -1,6 +1,7 @@
 package io.github.ssingh03_dev.nextchapter.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import org.hibernate.annotations.ColumnDefault;
 
 import java.time.Instant;
@@ -30,6 +31,11 @@ public class Book {
 
     @OneToMany(mappedBy = "book")
     private Set<Subscription> subscriptions = new LinkedHashSet<>();
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     public Long getId() {
         return id;
@@ -63,20 +69,28 @@ public class Book {
         this.createdAt = createdAt;
     }
 
-    public Set<Chapter> getChapters() {
-        return chapters;
+//    public Set<Chapter> getChapters() {
+//        return chapters;
+//    }
+//
+//    public void setChapters(Set<Chapter> chapters) {
+//        this.chapters = chapters;
+//    }
+//
+//    public Set<Subscription> getSubscriptions() {
+//        return subscriptions;
+//    }
+//
+//    public void setSubscriptions(Set<Subscription> subscriptions) {
+//        this.subscriptions = subscriptions;
+//    }
+
+    public User getUser() {
+        return user;
     }
 
-    public void setChapters(Set<Chapter> chapters) {
-        this.chapters = chapters;
-    }
-
-    public Set<Subscription> getSubscriptions() {
-        return subscriptions;
-    }
-
-    public void setSubscriptions(Set<Subscription> subscriptions) {
-        this.subscriptions = subscriptions;
+    public void setUser(User user) {
+        this.user = user;
     }
 
 }

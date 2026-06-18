@@ -24,7 +24,7 @@ public class BookController {
     @PostMapping
     public CreateBookResponse addBook(@Valid @RequestBody CreateBookRequest createBookRequest) {
         // the return is a dto containing book info plus raw token
-        return bookService.addBook(createBookRequest.title(), createBookRequest.author());
+        return bookService.addBook(createBookRequest.title(), createBookRequest.author(), createBookRequest.email());
     }
 
     // get mapping by bookid, used for subscription and other stuff

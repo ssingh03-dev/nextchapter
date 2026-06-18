@@ -57,12 +57,21 @@ public class BookTokenService {     // generate, hash, store, validate, revoke t
         String rawToken = prefix + "_" + generateRawToken();
         String hashToken = hashRawToken(rawToken);
 
-        BookToken newBT = new BookToken();
-        newBT.setBook(book);
-        newBT.setTokenHash(hashToken);
-        newBT.setTokenPrefix(prefix);
-        newBT.setActive(true);
-        newBT.setCreatedAt(Instant.now());
+        Optional<BookToken> bookToken = bookTokenRepository.findByBookId(bookId);
+
+        BookToken newBT;
+
+        if (bookToken.isPresent()) {
+            newBT = bookToken.get();
+            newBT.setTokenHash(hashToken);
+        } else {
+            newBT = new BookToken();
+            newBT.setBook(book);
+            newBT.setTokenHash(hashToken);
+            newBT.setTokenPrefix(prefix);
+            newBT.setActive(true);
+            newBT.setCreatedAt(Instant.now());
+        }
 
         bookTokenRepository.save(newBT);
 
@@ -85,12 +94,12 @@ public class BookTokenService {     // generate, hash, store, validate, revoke t
 //        return bookToken.getBook().getId().equals(bookId) && bookToken.getActive();
 //    }
 
-    public void revokeToken(String rawToken) {
-        String hashedToken = hashRawToken(rawToken);
-        BookToken bookToken = bookTokenRepository.findByTokenHash(hashedToken)
-                .orElseThrow(() -> new RuntimeException("Invalid token"));
-
-        bookToken.setActive(false);
-        bookTokenRepository.save(bookToken);
-    }
+//    public void revokeToken(String rawToken) {
+//        String hashedToken = hashRawToken(rawToken);
+//        BookToken bookToken = bookTokenRepository.findByTokenHash(hashedToken)
+//                .orElseThrow(() -> new RuntimeException("Invalid token"));
+//
+//        bookToken.setActive(false);
+//        bookTokenRepository.save(bookToken);
+//    }
 }

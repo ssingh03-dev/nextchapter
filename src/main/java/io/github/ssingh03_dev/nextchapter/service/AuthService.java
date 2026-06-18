@@ -60,7 +60,7 @@ public class AuthService {
         message.setText("Here is your token: " + token + "\nThis token expires at: " + formattedExpiry);
 
         mailSender.send(message);
-    }   // not tested yet
+    }
 
     public void requestLink(String email) {
         User user = userRepository.findByEmail(email)

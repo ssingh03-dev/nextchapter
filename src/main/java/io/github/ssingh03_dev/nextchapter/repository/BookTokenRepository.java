@@ -7,4 +7,6 @@ import java.util.Optional;
 
 public interface BookTokenRepository extends JpaRepository<BookToken, Long> {
     Optional<BookToken> findByTokenHash(String hashedToken);
+
+    Optional<BookToken> findByBookId(Long bookId);
 }
