@@ -4,6 +4,7 @@ import io.github.ssingh03_dev.nextchapter.dto.response.AuthTokenResponse;
 import io.github.ssingh03_dev.nextchapter.model.AuthToken;
 import io.github.ssingh03_dev.nextchapter.model.User;
 import io.github.ssingh03_dev.nextchapter.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -62,6 +63,7 @@ public class AuthService {
         mailSender.send(message);
     }
 
+    @Transactional
     public void requestLink(String email) {
         User user = userRepository.findByEmail(email)
                 .orElseGet(() -> {

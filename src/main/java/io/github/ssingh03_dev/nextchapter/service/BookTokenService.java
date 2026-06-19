@@ -2,7 +2,6 @@ package io.github.ssingh03_dev.nextchapter.service;
 
 import io.github.ssingh03_dev.nextchapter.model.Book;
 import io.github.ssingh03_dev.nextchapter.model.BookToken;
-import io.github.ssingh03_dev.nextchapter.repository.BookRepository;
 import io.github.ssingh03_dev.nextchapter.repository.BookTokenRepository;
 import org.springframework.stereotype.Service;
 
@@ -18,13 +17,11 @@ import java.util.Optional;
 public class BookTokenService {     // generate, hash, store, validate, revoke tokens
 
     private final BookTokenRepository bookTokenRepository;
-    private final BookRepository bookRepository;
 
     private static final SecureRandom secureRandom = new SecureRandom();
 
-    public BookTokenService(BookTokenRepository bookTokenRepository, BookRepository bookRepository) {
+    public BookTokenService(BookTokenRepository bookTokenRepository) {
         this.bookTokenRepository = bookTokenRepository;
-        this.bookRepository = bookRepository;
     }
 
     private String hashRawToken(String rawToken) {
@@ -44,9 +41,7 @@ public class BookTokenService {     // generate, hash, store, validate, revoke t
         return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
     }
 
-    public String getNewToken(Long bookId) {
-        Book book = bookRepository.findById(bookId)
-                .orElseThrow(() -> new RuntimeException("Book not found"));
+    public String getNewToken(Book book) {
 //        String prefix = book.getTitle()
 //                .trim()
 //                .toLowerCase()
@@ -57,7 +52,7 @@ public class BookTokenService {     // generate, hash, store, validate, revoke t
         String rawToken = prefix + "_" + generateRawToken();
         String hashToken = hashRawToken(rawToken);
 
-        Optional<BookToken> bookToken = bookTokenRepository.findByBookId(bookId);
+        Optional<BookToken> bookToken = bookTokenRepository.findByBookId(book.getId());
 
         BookToken newBT;
 

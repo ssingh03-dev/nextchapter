@@ -1,9 +1,9 @@
 package io.github.ssingh03_dev.nextchapter.controller;
 
 import io.github.ssingh03_dev.nextchapter.dto.request.CreateBookRequest;
+import io.github.ssingh03_dev.nextchapter.dto.request.RequestLinkRequest;
 import io.github.ssingh03_dev.nextchapter.dto.request.UpdateBookRequest;
 import io.github.ssingh03_dev.nextchapter.dto.response.BookResponse;
-import io.github.ssingh03_dev.nextchapter.dto.response.CreateBookResponse;
 import io.github.ssingh03_dev.nextchapter.service.BookService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -22,9 +22,16 @@ public class BookController {
     }
 
     @PostMapping
-    public CreateBookResponse addBook(@Valid @RequestBody CreateBookRequest createBookRequest) {
+    public BookResponse addBook(@Valid @RequestBody CreateBookRequest createBookRequest) {
         // the return is a dto containing book info plus raw token
         return bookService.addBook(createBookRequest.title(), createBookRequest.author(), createBookRequest.email());
+    }
+
+    @PostMapping("/{id}/request-link")
+    public ResponseEntity<String> requestLink(@Valid @RequestBody RequestLinkRequest requestLinkRequest,
+                                              @PathVariable Long id) {
+        bookService.requestLink(requestLinkRequest.email(), id);
+        return ResponseEntity.ok("If the book belongs to that email, a link has been sent.");
     }
 
     // get mapping by bookid, used for subscription and other stuff
