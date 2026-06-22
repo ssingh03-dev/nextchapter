@@ -22,7 +22,7 @@ public class BookImportController {
     }
 
     @PostMapping("/import")
-    public ResponseEntity<ImportResponse> processPdf(@RequestParam("file")MultipartFile file) throws IOException {
+    public ResponseEntity<ImportResponse> processMarkdown(@RequestParam("file")MultipartFile file) throws IOException {
         String content = new String(file.getBytes(), StandardCharsets.UTF_8);
         return ResponseEntity.ok(bookImportService.addFromMarkdown(content));
     }
