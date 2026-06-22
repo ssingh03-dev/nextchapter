@@ -105,7 +105,7 @@ public class BookService {      // add/update books, for now
                 book.getAuthor(),
                 book.getCreatedAt()
         );
-    }   // not tested if it works
+    }
 
     @Transactional
     public void requestLink(String email, Long bookId) {

@@ -7,16 +7,13 @@ import io.github.ssingh03_dev.nextchapter.dto.response.ChapterSummaryResponse;
 import io.github.ssingh03_dev.nextchapter.dto.response.ImportResponse;
 import io.github.ssingh03_dev.nextchapter.model.Book;
 import io.github.ssingh03_dev.nextchapter.model.Chapter;
-import io.github.ssingh03_dev.nextchapter.model.User;
 import io.github.ssingh03_dev.nextchapter.repository.BookRepository;
-import io.github.ssingh03_dev.nextchapter.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.yaml.snakeyaml.Yaml;
 
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -27,14 +24,14 @@ public class BookImportService {
 
     private final ChapterService chapterService;
     private final BookRepository bookRepository;
-    private final UserRepository userRepository;
     private final BookTokenService bookTokenService;
+    private final BookService bookService;
 
-    public BookImportService(ChapterService chapterService, BookRepository bookRepository, UserRepository userRepository, BookTokenService bookTokenService) {
+    public BookImportService(ChapterService chapterService, BookRepository bookRepository, BookTokenService bookTokenService, BookService bookService) {
         this.chapterService = chapterService;
         this.bookRepository = bookRepository;
-        this.userRepository = userRepository;
         this.bookTokenService = bookTokenService;
+        this.bookService = bookService;
     }
 
     // a private parse file method, should return book and chapters dto, just give parsed data
@@ -119,30 +116,20 @@ public class BookImportService {
     public ImportResponse addFromMarkdown(String content) {
         ParsedMarkdown pM = parse(content);
 
-        User user = userRepository.findByEmail(pM.email())
-                .orElseGet(() -> {
-                    User newUser = new User();
-                    newUser.setEmail(pM.email());
-                    newUser.setCreatedAt(Instant.now());
-                    return userRepository.save(newUser);
-                });
-
         Optional<Book> bookOptional = bookRepository.findByTitleIgnoreCaseAndAuthorIgnoreCase(pM.title(), pM.author());
         boolean created = bookOptional.isEmpty();
         Book book;
 
         if (!created) {
+            if (pM.rawToken() == null) throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token required");
             book = bookTokenService.findBookByToken(pM.rawToken()).orElse(null);
             if (!bookOptional.get().equals(book)) {
                 throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid token for this book.");
             }
         } else {
-            Book newBook = new Book();
-            newBook.setTitle(pM.title());
-            newBook.setAuthor(pM.author());
-            newBook.setUser(user);
-            newBook.setCreatedAt(Instant.now());
-            book = bookRepository.save(newBook);
+            BookResponse bookResponse = bookService.addBook(pM.title(), pM.author(), pM.email());
+            // addBook either found existing book OR created new one + emailed token
+            book = bookRepository.findById(bookResponse.id()).orElseThrow();
         }
 
         List<Chapter> chapters = new ArrayList<>();
