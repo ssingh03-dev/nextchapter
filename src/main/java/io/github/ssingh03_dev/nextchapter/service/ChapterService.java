@@ -46,6 +46,18 @@ public class ChapterService {
         );
     }
 
+    private Chapter saveChapter(Book book, String title, String content) {
+        Chapter chapter = new Chapter();
+        chapter.setBook(book);
+        chapter.setTitle(title);
+        chapter.setContent(content);
+        chapter.setChapterNumber(chapterRepository.findMaxChapterNumberByBookId(book.getId()) + 1);
+        chapter.setCreatedAt(Instant.now());
+
+        return chapterRepository.save(chapter);
+    }
+
+    // external method
     public Optional<CreateChapterResponse> addChapter(Long bookId, String title, String content, String rawToken) {
         Book book = bookTokenService.findBookByToken(rawToken).orElse(null);
 
@@ -53,14 +65,7 @@ public class ChapterService {
             return Optional.empty();
         }
 
-        Chapter chapter = new Chapter();
-        chapter.setBook(book);
-        chapter.setTitle(title);
-        chapter.setContent(content);
-        chapter.setChapterNumber(chapterRepository.findMaxChapterNumberByBookId(bookId) + 1);
-        chapter.setCreatedAt(Instant.now());
-
-        chapter = chapterRepository.save(chapter);
+        Chapter chapter = saveChapter(book, title, content);
 
         return Optional.of(new CreateChapterResponse(
                 chapter.getId(),
@@ -69,6 +74,11 @@ public class ChapterService {
                 chapter.getTitle(),
                 chapter.getContent()
         ));
+    }
+
+    // Internal method
+    protected Chapter addChapter(Book book, String title, String content) {
+        return saveChapter(book, title, content);
     }
 
     public Optional<ChapterResponse> getChapterById(Long bookId, Long chapterId) {
