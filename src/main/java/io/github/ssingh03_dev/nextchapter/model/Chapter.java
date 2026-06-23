@@ -27,12 +27,15 @@ public class Chapter {
     @Column(name = "title")
     private String title;
 
-    @Column(name = "content", nullable = false, length = Integer.MAX_VALUE)
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
     @ColumnDefault("now()")
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
+
+    @Column(name = "recap", columnDefinition = "TEXT")
+    private String recap;
 
     public Long getId() {
         return id;
@@ -80,6 +83,14 @@ public class Chapter {
 
     public void setCreatedAt(Instant createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getRecap() {
+        return recap;
+    }
+
+    public void setRecap(String recap) {
+        this.recap = recap;
     }
 
 }

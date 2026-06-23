@@ -103,6 +103,7 @@ public class ChapterService {
                 .toList();
     }
 
+    // null recap field in chapter
     public Optional<ChapterResponse> updateChapter(
             Long bookId, Long chapterId, String rawToken, UpdateChapterRequest updateChapterRequest
     ) {
@@ -121,6 +122,7 @@ public class ChapterService {
         }
         if (updateChapterRequest.content() != null) {
             chapter.setContent(updateChapterRequest.content());
+            chapter.setRecap(null); // only invalidate if content changed
         }
 
         chapter = chapterRepository.save(chapter);

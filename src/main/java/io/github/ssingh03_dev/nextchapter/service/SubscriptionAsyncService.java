@@ -26,12 +26,34 @@ public class SubscriptionAsyncService {
     private final SubscriptionRepository subscriptionRepository;
     private static final Logger log = LoggerFactory.getLogger(SubscriptionAsyncService.class);
     private final SubscriptionPdfService subscriptionPdfService;
+    private final AiService aiService;
 
-    public SubscriptionAsyncService(ChapterRepository chapterRepository, JavaMailSender mailSender, SubscriptionRepository subscriptionRepository, SubscriptionPdfService subscriptionPdfService) {
+    public SubscriptionAsyncService(ChapterRepository chapterRepository, JavaMailSender mailSender, SubscriptionRepository subscriptionRepository, SubscriptionPdfService subscriptionPdfService, AiService aiService) {
         this.chapterRepository = chapterRepository;
         this.mailSender = mailSender;
         this.subscriptionRepository = subscriptionRepository;
         this.subscriptionPdfService = subscriptionPdfService;
+        this.aiService = aiService;
+    }
+
+    // add gemini here (make it read previous chapter as long as previous chapter is >0, should be precon from where its called from
+    // later: create recap in chapters table make it nullable for lazy writes
+    // logic if recap is null for that chapter, generates a new one and add it in and return it, if not null return that
+    // if chapter gets updated, null recap
+    private String getRecap(Chapter chapter) {
+        if (chapter == null) return "There is no last chapter.";
+
+        if (chapter.getRecap() != null) return chapter.getRecap();
+
+        String recap = aiService.getRecap(
+                chapter.getBook().getTitle(),
+                chapter.getTitle(),
+                chapter.getContent()
+        );
+
+        chapter.setRecap(recap);
+        chapterRepository.save(chapter);
+        return recap;
     }
 
     private @NonNull MimeMessageHelper getMimeMessageHelper(MimeMessage message, Subscription subscription, List<Chapter> chapters) throws MessagingException {
@@ -104,7 +126,8 @@ public class SubscriptionAsyncService {
             MimeMessageHelper helper = getMimeMessageHelper(message, subscription, chapters);
 
             StringBuilder body = getBody(subscription, chapters);
-            helper.setText(body.toString(), true);
+            String recap = "AI Generated Recap of Last Chapter:\n" + getRecap(subscription.getLastSentChapter()) + "\n";
+            helper.setText(recap + body, true);
 
             mailSender.send(message);
 
