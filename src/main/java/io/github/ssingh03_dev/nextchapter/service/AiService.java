@@ -1,5 +1,7 @@
 package io.github.ssingh03_dev.nextchapter.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 
@@ -9,6 +11,7 @@ import java.util.Arrays;
 public class AiService {
 
     private final ChatClient chatClient;
+    private static final Logger log = LoggerFactory.getLogger(AiService.class);
 
     private static final int MAX_CONTENT_WORDS = 800;
 
@@ -25,24 +28,28 @@ public class AiService {
     public String getRecap(String bookTitle, String chapterTitle, String content) {
 
         String prompt = """
-            You are a reading assistant helping someone continue a book they've been reading.
+            You are a reading assistant. Write a recap of the chapter below.
             
-            Given the chapter below, write a 2-3 sentence recap that:
-            - Reminds the reader what happened without spoiling anything ahead
-            - Is engaging and makes them excited to continue reading
-            - Reads naturally, like a friend catching you up
+            Rules (strictly follow):
+            - Exactly 1-2 sentences. No more.
+            - No options, no formatting, no bullet points, no headers.
+            - No introductory phrases like "In this chapter..." or "You left off...".
+            - Output ONLY the recap text. Nothing else before or after it.
             
             Book: %s
             Chapter: %s
             
             Chapter Content:
             %s
-            
-            Recap:
             """.formatted(bookTitle, chapterTitle, truncate(content));
 
-        return chatClient.prompt()
-                .user(prompt)
-                .call().content();
+        try {
+            return chatClient.prompt()
+                    .user(prompt)
+                    .call().content();
+        } catch (RuntimeException e) {
+            log.warn("Gemini recap failed for {} / {}", bookTitle, chapterTitle, e);
+            return "AI recap unavailable right now because Gemini is busy.";
+        }
     }
 }

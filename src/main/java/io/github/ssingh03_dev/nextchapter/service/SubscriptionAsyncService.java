@@ -43,7 +43,7 @@ public class SubscriptionAsyncService {
     private String getRecap(Chapter chapter) {
         if (chapter == null) return "There is no last chapter.";
 
-        if (chapter.getRecap() != null) return chapter.getRecap();
+        if (chapter.getRecap() != null && !chapter.getRecap().isEmpty()) return chapter.getRecap();
 
         String recap = aiService.getRecap(
                 chapter.getBook().getTitle(),
