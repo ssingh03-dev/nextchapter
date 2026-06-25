@@ -22,8 +22,10 @@ public class AiService {
     private String truncate(String text) {
         String[] words = text.split("\\s+");
         if (words.length <= MAX_CONTENT_WORDS) return text;
-        return String.join(" ", Arrays.copyOfRange(words, 0, MAX_CONTENT_WORDS)) + "...";
-    }
+        String firstHalf = String.join(" ", Arrays.copyOfRange(words, 0, MAX_CONTENT_WORDS / 2));
+        String lastHalf = String.join(" ", Arrays.copyOfRange(words, words.length - MAX_CONTENT_WORDS / 2, words.length));
+        return firstHalf + " [...] " + lastHalf;
+    }   // should work, if too larger, takes portion of first part and last part based on max word count
 
     public String getRecap(String bookTitle, String chapterTitle, String content) {
 
