@@ -92,7 +92,7 @@ public class SubscriptionAsyncService {
                 subscription.getBook().getTitle(),
                 subscription.getBook().getAuthor()));
         // find way to keep paragraph spacing like in the pdf attachment
-        // the replace should work
+        // the content replace should work
         for (Chapter chapter : chapters) {
             body.append(String.format("""
                             <p><strong>Chapter %d: %s</strong></p>
